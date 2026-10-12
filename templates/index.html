@@ -1,0 +1,701 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f5f7fb">
+    <title>BusWise | Smart Transit Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+<div class="app-shell">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a href="/" class="brand">
+            <span class="brand-icon">B</span>
+            <span>BusWise<small>SMART TRANSIT</small></span>
+        </a>
+
+        <p class="nav-heading">WORKSPACE</p>
+
+        <a class="nav-link active" href="#dashboard">
+            <span class="nav-icon">▦</span> Dashboard
+        </a>
+        <a class="nav-link" href="#predictor">
+            <span class="nav-icon">↗</span> Journey predictor
+        </a>
+        <a class="nav-link" href="#results">
+            <span class="nav-icon">◷</span> Latest prediction
+        </a>
+        <a class="nav-link" href="#analytics">
+            <span class="nav-icon">▥</span> Analytics
+        </a>
+
+        <div class="sidebar-bottom">
+            <div class="status-dot"></div>
+            <div>
+                <strong>Prediction engine</strong>
+                <small>ML models loaded by Flask</small>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN DASHBOARD -->
+    <main class="main-content" id="dashboard">
+
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">COIMBATORE · TRANSIT INTELLIGENCE</p>
+                <h1>Journey dashboard</h1>
+                <p class="subtitle">
+                    Explore predicted bus delays and crowding.
+                </p>
+            </div>
+
+            <div class="prototype-tag">
+                <span></span> ML PROTOTYPE
+            </div>
+        </header>
+
+        <!-- WELCOME BANNER -->
+        <section class="welcome-banner">
+            <div class="welcome-copy">
+                <p class="banner-label">YOUR SMART TRAVEL ASSISTANT</p>
+                <h2>Make every journey<br>more predictable.</h2>
+                <p>
+                    Enter your travel conditions to estimate delay,
+                    journey duration, and bus crowding.
+                </p>
+                <a href="#predictor" class="banner-button">
+                    Predict a journey <span>→</span>
+                </a>
+            </div>
+
+            <div class="banner-art" aria-hidden="true">
+                <div class="orbit orbit-one"></div>
+                <div class="orbit orbit-two"></div>
+                <div class="bus-emoji">🚌</div>
+                <div class="floating-pin pin-one">● <span>Route</span></div>
+                <div class="floating-pin pin-two">✓ <span>Predict</span></div>
+            </div>
+        </section>
+
+        <!-- PREDICTION RESULT CARDS -->
+        <section class="section-heading" id="results">
+            <div>
+                <p class="eyebrow">YOUR TRAVEL OUTLOOK</p>
+                <h2>Prediction results</h2>
+            </div>
+            <span class="section-note">Updates after each prediction</span>
+        </section>
+
+        <section class="results-grid" aria-live="polite">
+
+            <article class="metric-card">
+                <div class="metric-top">
+                    <span class="metric-icon delay-icon">◷</span>
+                    <span class="metric-label">PREDICTED DELAY</span>
+                </div>
+                <div class="metric-value" id="delayValue">
+                    —<small> min</small>
+                </div>
+                <p class="metric-description" id="delayDescription">
+                    Estimated additional travel time
+                </p>
+            </article>
+
+            <article class="metric-card">
+                <div class="metric-top">
+                    <span class="metric-icon duration-icon">↗</span>
+                    <span class="metric-label">TOTAL JOURNEY</span>
+                </div>
+                <div class="metric-value" id="durationValue">
+                    —<small> min</small>
+                </div>
+                <p class="metric-description">
+                    Scheduled time plus predicted delay
+                </p>
+            </article>
+
+            <article class="metric-card crowd-card">
+                <div class="metric-top">
+                    <span class="metric-icon crowd-icon">♧</span>
+                    <span class="metric-label">BUS CROWDING</span>
+                </div>
+                <div class="crowd-badge crowd-neutral" id="crowdValue">
+                    Awaiting prediction
+                </div>
+                <p class="metric-description" id="crowdDescription">
+                    Estimated crowding category
+                </p>
+            </article>
+
+        </section>
+
+        <!-- PREDICTION FORM AND INFORMATION -->
+        <section class="content-grid" id="predictor">
+
+            <article class="panel form-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">CUSTOMIZE YOUR JOURNEY</p>
+                        <h2>Journey predictor</h2>
+                    </div>
+                    <span class="step-number">01</span>
+                </div>
+
+                <p class="panel-description">
+                    Enter the conditions for the journey you want to check.
+                </p>
+
+                <form id="predictionForm">
+                    <div class="form-grid">
+
+                        <div class="field full-width">
+                            <label for="route_id">Bus route</label>
+                            <select id="route_id" name="route_id" required>
+                                {% for route in route_ids %}
+                                <option value="{{ route }}">{{ route }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="day">Day of travel</label>
+                            <select id="day" name="day" required>
+                                <option>Monday</option>
+                                <option selected>Tuesday</option>
+                                <option>Wednesday</option>
+                                <option>Thursday</option>
+                                <option>Friday</option>
+                                <option>Saturday</option>
+                                <option>Sunday</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="departure_hour">Departure hour</label>
+                            <select id="departure_hour" name="departure_hour" required>
+                                <option value="6">6:00 AM</option>
+                                <option value="7">7:00 AM</option>
+                                <option value="8">8:00 AM</option>
+                                <option value="9">9:00 AM</option>
+                                <option value="10">10:00 AM</option>
+                                <option value="11" selected>11:00 AM</option>
+                                <option value="12">12:00 PM</option>
+                                <option value="13">1:00 PM</option>
+                                <option value="14">2:00 PM</option>
+                                <option value="15">3:00 PM</option>
+                                <option value="16">4:00 PM</option>
+                                <option value="17">5:00 PM</option>
+                                <option value="18">6:00 PM</option>
+                                <option value="19">7:00 PM</option>
+                                <option value="20">8:00 PM</option>
+                                <option value="21">9:00 PM</option>
+                                <option value="22">10:00 PM</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="weather">Weather</label>
+                            <select id="weather" name="weather" required>
+                                <option selected>Sunny</option>
+                                <option>Cloudy</option>
+                                <option>Rainy</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="traffic">Traffic level</label>
+                            <select id="traffic" name="traffic" required>
+                                <option>Low</option>
+                                <option selected>Medium</option>
+                                <option>High</option>
+                            </select>
+                        </div>
+
+                        <div class="field full-width">
+                            <label for="scheduled_minutes">
+                                Scheduled journey duration
+                            </label>
+                            <div class="input-with-unit">
+                                <input
+                                    type="number"
+                                    id="scheduled_minutes"
+                                    name="scheduled_minutes"
+                                    min="1"
+                                    max="600"
+                                    value="35"
+                                    required>
+                                <span>minutes</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <button class="predict-button" id="predictButton" type="submit">
+                        <span id="buttonText">Generate prediction</span>
+                        <span aria-hidden="true">→</span>
+                    </button>
+
+                    <p class="form-message" id="formMessage" role="status"></p>
+                </form>
+            </article>
+
+            <aside class="panel insights-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">HOW IT WORKS</p>
+                        <h2>Travel insights</h2>
+                    </div>
+                    <span class="insight-symbol">✦</span>
+                </div>
+
+                <div class="insight-item">
+                    <span class="insight-number">01</span>
+                    <div>
+                        <h3>Delay estimation</h3>
+                        <p>
+                            A regression model estimates additional journey
+                            time from the selected conditions.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="insight-item">
+                    <span class="insight-number">02</span>
+                    <div>
+                        <h3>Crowding prediction</h3>
+                        <p>
+                            A classification model estimates a low,
+                            medium, or high crowding category.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="notice-card">
+                    <span class="notice-icon">ⓘ</span>
+                    <div>
+                        <strong>Prototype data notice</strong>
+                        <p>
+                            This prototype uses synthetic trip records.
+                            Results are not live bus updates or verified
+                            real-world estimates.
+                        </p>
+                    </div>
+                </div>
+            </aside>
+
+        </section>
+
+        <!-- ANALYTICS CHARTS -->
+        <section class="analytics-section" id="analytics">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">JOURNEY INSIGHTS</p>
+                    <h2>Prediction analytics</h2>
+                </div>
+                <span class="section-note" id="chartCount">
+                    No predictions yet
+                </span>
+            </div>
+
+            <p class="analytics-note">
+                Charts show predictions generated in this browser session.
+                They represent model outputs, not observed bus performance.
+            </p>
+
+            <div class="analytics-grid">
+
+                <article class="panel chart-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Predicted delay trend</h2>
+                            <p class="chart-subtitle">
+                                Additional travel time in minutes
+                            </p>
+                        </div>
+                        <span class="chart-icon">↗</span>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="delayChart"
+                            role="img"
+                            aria-label="Line chart showing predicted delays">
+                        </canvas>
+                    </div>
+                </article>
+
+                <article class="panel chart-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Crowding distribution</h2>
+                            <p class="chart-subtitle">
+                                Predictions by category
+                            </p>
+                        </div>
+                        <span class="chart-icon">◉</span>
+                    </div>
+
+                    <div class="chart-container doughnut-container">
+                        <canvas id="crowdingChart"
+                            role="img"
+                            aria-label="Doughnut chart showing predicted crowding categories">
+                        </canvas>
+                    </div>
+                </article>
+
+                <article class="panel chart-panel duration-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Journey duration comparison</h2>
+                            <p class="chart-subtitle">
+                                Scheduled versus estimated minutes
+                            </p>
+                        </div>
+                        <span class="chart-icon">◷</span>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="durationChart"
+                            role="img"
+                            aria-label="Bar chart comparing scheduled and estimated durations">
+                        </canvas>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+
+        <footer class="footer">
+            <span>BusWise · Smart Transit Intelligence</span>
+            <span>Python · Flask · Scikit-learn · Chart.js</span>
+        </footer>
+
+    </main>
+</div>
+
+<script>
+    // ----------------------------------------
+    // FORM ELEMENTS
+    // ----------------------------------------
+    const form = document.getElementById("predictionForm");
+    const button = document.getElementById("predictButton");
+    const buttonText = document.getElementById("buttonText");
+    const message = document.getElementById("formMessage");
+
+    // Stores predictions for this browser session only.
+    const journeyHistory = [];
+
+    // ----------------------------------------
+    // CHART CONFIGURATION
+    // ----------------------------------------
+    const chartColors = {
+        green: "#168568",
+        blue: "#5277ce",
+        amber: "#e8a23b",
+        red: "#d95757",
+        muted: "#7b879a",
+        grid: "#e8edf3"
+    };
+
+    const chartFont = {
+        family: "DM Sans, sans-serif"
+    };
+
+    const commonChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 350 },
+        plugins: {
+            legend: {
+                labels: {
+                    color: chartColors.muted,
+                    font: chartFont,
+                    usePointStyle: true,
+                    padding: 16
+                }
+            }
+        }
+    };
+
+    // ----------------------------------------
+    // 1. DELAY LINE CHART
+    // ----------------------------------------
+    const delayChart = new Chart(
+        document.getElementById("delayChart"),
+        {
+            type: "line",
+            data: {
+                labels: [],
+                datasets: [{
+                    label: "Predicted delay (min)",
+                    data: [],
+                    borderColor: chartColors.green,
+                    backgroundColor: "rgba(22,133,104,0.10)",
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                ...commonChartOptions,
+                scales: {
+                    x: {
+                        ticks: { color: chartColors.muted, font: chartFont },
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: "Minutes",
+                            color: chartColors.muted,
+                            font: chartFont
+                        },
+                        ticks: { color: chartColors.muted, font: chartFont },
+                        grid: { color: chartColors.grid }
+                    }
+                }
+            }
+        }
+    );
+
+    // ----------------------------------------
+    // 2. CROWDING DOUGHNUT CHART
+    // ----------------------------------------
+    const crowdingChart = new Chart(
+        document.getElementById("crowdingChart"),
+        {
+            type: "doughnut",
+            data: {
+                labels: ["Low", "Medium", "High"],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: [
+                        chartColors.green,
+                        chartColors.amber,
+                        chartColors.red
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                ...commonChartOptions,
+                cutout: "68%",
+                plugins: {
+                    ...commonChartOptions.plugins,
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            color: chartColors.muted,
+                            font: chartFont,
+                            usePointStyle: true,
+                            padding: 18
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+    // ----------------------------------------
+    // 3. JOURNEY DURATION BAR CHART
+    // ----------------------------------------
+    const durationChart = new Chart(
+        document.getElementById("durationChart"),
+        {
+            type: "bar",
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: "Scheduled",
+                        data: [],
+                        backgroundColor: "#b9c9ef",
+                        borderRadius: 5
+                    },
+                    {
+                        label: "Estimated",
+                        data: [],
+                        backgroundColor: chartColors.green,
+                        borderRadius: 5
+                    }
+                ]
+            },
+            options: {
+                ...commonChartOptions,
+                scales: {
+                    x: {
+                        ticks: { color: chartColors.muted, font: chartFont },
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: "Minutes",
+                            color: chartColors.muted,
+                            font: chartFont
+                        },
+                        ticks: { color: chartColors.muted, font: chartFont },
+                        grid: { color: chartColors.grid }
+                    }
+                }
+            }
+        }
+    );
+
+    // ----------------------------------------
+    // UPDATE ALL THREE CHARTS
+    // ----------------------------------------
+    function updateJourneyCharts() {
+        // Show the most recent eight journeys on the trend charts.
+        const recent = journeyHistory.slice(-8);
+
+        const labels = recent.map((journey, index) => {
+            const number = journeyHistory.length - recent.length + index + 1;
+            return `${journey.route} #${number}`;
+        });
+
+        delayChart.data.labels = labels;
+        delayChart.data.datasets[0].data =
+            recent.map(journey => journey.delay);
+        delayChart.update();
+
+        // Distribution counts include all predictions this session.
+        crowdingChart.data.datasets[0].data = [
+            journeyHistory.filter(j => j.crowding === "LOW").length,
+            journeyHistory.filter(j => j.crowding === "MEDIUM").length,
+            journeyHistory.filter(j => j.crowding === "HIGH").length
+        ];
+        crowdingChart.update();
+
+        durationChart.data.labels = labels;
+        durationChart.data.datasets[0].data =
+            recent.map(journey => journey.scheduled);
+        durationChart.data.datasets[1].data =
+            recent.map(journey => journey.estimated);
+        durationChart.update();
+
+        const total = journeyHistory.length;
+        document.getElementById("chartCount").textContent =
+            `${total} prediction${total === 1 ? "" : "s"} this session`;
+    }
+
+    // ----------------------------------------
+    // SUBMIT FORM TO EXISTING FLASK ENDPOINT
+    // ----------------------------------------
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        button.disabled = true;
+        buttonText.textContent = "Generating prediction...";
+        message.textContent = "";
+        message.className = "form-message";
+
+        const formData = new FormData(form);
+        const payload = Object.fromEntries(formData.entries());
+
+        payload.departure_hour = Number(payload.departure_hour);
+        payload.scheduled_minutes = Number(payload.scheduled_minutes);
+
+        try {
+            const response = await fetch("/predict", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.error || "Unable to generate prediction."
+                );
+            }
+
+            // Update the delay card.
+            document.getElementById("delayValue").innerHTML =
+                `${result.delay_minutes}<small> min</small>`;
+
+            document.getElementById("delayDescription").textContent =
+                `Estimated extra time for route ${result.route_id}`;
+
+            // Update the estimated journey duration card.
+            document.getElementById("durationValue").innerHTML =
+                `${result.estimated_duration}<small> min</small>`;
+
+            // Update the crowding card and its color.
+            const crowd = document.getElementById("crowdValue");
+            const crowdLevel = String(result.crowding).toUpperCase();
+
+            crowd.textContent =
+                crowdLevel.charAt(0) + crowdLevel.slice(1).toLowerCase();
+
+            crowd.className = "crowd-badge";
+
+            if (crowdLevel === "LOW") {
+                crowd.classList.add("crowd-low");
+                document.getElementById("crowdDescription").textContent =
+                    "Model predicts a low crowding level";
+            } else if (crowdLevel === "MEDIUM") {
+                crowd.classList.add("crowd-medium");
+                document.getElementById("crowdDescription").textContent =
+                    "Model predicts a medium crowding level";
+            } else if (crowdLevel === "HIGH") {
+                crowd.classList.add("crowd-high");
+                document.getElementById("crowdDescription").textContent =
+                    "Model predicts a high crowding level";
+            } else {
+                crowd.classList.add("crowd-neutral");
+                document.getElementById("crowdDescription").textContent =
+                    "Predicted crowding category";
+            }
+
+            // Record only successful predictions.
+            journeyHistory.push({
+                route: result.route_id,
+                delay: Number(result.delay_minutes),
+                scheduled: Number(result.scheduled_minutes),
+                estimated: Number(result.estimated_duration),
+                crowding: crowdLevel
+            });
+
+            // Refresh the three charts.
+            updateJourneyCharts();
+
+            message.textContent =
+                result.notice ||
+                "Prediction generated. Results use synthetic training data.";
+            message.classList.add("success-message");
+
+            document.getElementById("results").scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+        } catch (error) {
+            message.textContent = error.message;
+            message.classList.add("error-message");
+        } finally {
+            button.disabled = false;
+            buttonText.textContent = "Generate prediction";
+        }
+    });
+</script>
+
+</body>
+</html>

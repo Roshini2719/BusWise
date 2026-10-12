@@ -1,0 +1,23 @@
+route_id,bus_number,source,destination,base_minutes
+R001,1,Maruthamalai,Avarampalayam,35
+R002,1A,Ondipudur,Vadavalli,50
+R003,2,Perur,Polytechnic,35
+R004,3,Ganapathy,Madukkarai,45
+R005,4,Thudiyalur,Podanur,45
+R006,6A,Gandhipuram,Periyanaickanpalayam,40
+R007,8,Chettipalayam,Singanallur,30
+R008,10,Saibaba Colony,Chinniampalayam,45
+R009,11,Railway Station,Kanuvai,35
+R010,12,Gandhipuram,Premier Mills,30
+R011,12C,Eachanari,Polytechnic,25
+R012,16,Town Hall,Airport,25
+R013,19,Ukkadam,Nanjundapuram,30
+R014,24,Ukkadam,Kalapatti,40
+R015,26,Ukkadam,Veerapandipudur,40
+R016,28,Gandhipuram,Thondamuthur,45
+R017,33F,Singanallur,Premier Mills,25
+R018,52,Ukkadam,Saibaba Colony,25
+R019,55,Gandhipuram,Vellalore,35
+R020,63,Saravanampatti,Selvapuram,40
+R021,70,Gandhipuram,Maruthamalai,40
+R022,95,Gandhipuram,Singanallur,30
